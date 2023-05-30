@@ -20,7 +20,7 @@ This repo contains code and data associated with the paper ["Schema-Driven Infor
 
 # Method: InstrucTE
 
-<img src="figures/main.png" >
+<img src="figures/method.png" >
 
 # Code & Data
 Coming soon.
