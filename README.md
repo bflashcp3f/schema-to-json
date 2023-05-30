@@ -15,7 +15,7 @@ This repo contains code and data associated with the paper ["Schema-Driven Infor
 
 # Task: Schema-to-JSON
 
-<img src="figures/task.png" height="400">
+<img src="figures/task.png" height="550">
 
 
 # Method: InstrucTE
