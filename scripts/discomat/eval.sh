@@ -4,7 +4,7 @@
 # command: bash scripts/discomat/eval.sh
 
 API_SOURCE=azure
-BACKEND=fan-gpt4
+BACKEND=gpt4
 
 python run.py \
     --run_type eval \

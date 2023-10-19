@@ -7,10 +7,10 @@
 # BACKEND=gpt-3.5-turbo
 
 API_SOURCE=azure
-# BACKEND=fan-gpt35-turbo
+# BACKEND=gpt35-turbo
 # MAX_TOKENS=512
 
-BACKEND=fan-gpt4
+BACKEND=gpt4
 MAX_TOKENS=2048
 
 python run.py \

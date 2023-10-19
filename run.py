@@ -29,7 +29,7 @@ def main(args):
             openai.api_key = os.getenv("OPENAI_API_KEY")
         elif args.api_source == 'azure':
             openai.api_type = "azure"
-            openai.api_base = "https://fan-inference2.openai.azure.com/"
+            openai.api_base = "https://inference.openai.azure.com/"
             openai.api_version = "2023-07-01-preview"
             openai.api_key = os.getenv("AZURE_OPENAI_KEY")
         else:

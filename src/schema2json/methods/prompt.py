@@ -12,11 +12,11 @@ from typing import Any
 from schema2json.tasks.base import Task, DATA_PATH
 
 
-CHATCOMPLETION_MODEL = ['gpt-4', 'gpt-3.5-turbo', 'gpt-35-turbo-0613', 'gpt-35-turbo-16k', 'fan-gpt4', 'fan-gpt35-turbo']
+CHATCOMPLETION_MODEL = ['gpt-4', 'gpt-3.5-turbo', 'gpt-35-turbo-0613', 'gpt-35-turbo-16k', 'gpt4', 'gpt35-turbo']
 
 AZURE_MODELS = {
-    'fan-gpt4': 'gpt-4',
-    'fan-gpt35-turbo': 'gpt-3.5-turbo',
+    'gpt4': 'gpt-4',
+    'gpt35-turbo': 'gpt-3.5-turbo',
     'gpt-35-turbo-0613': 'gpt-3.5-turbo',
     'gpt-35-turbo-16k': 'gpt-3.5-turbo-16k',
 }
