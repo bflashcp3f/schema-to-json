@@ -6,8 +6,8 @@ with open('README.md', 'r', encoding='utf-8') as fh:
 
 setuptools.setup(
     name='schema-to-json',
-    author='Fan Bai',
-    author_email='fan.bai@cc.gatech.edu',
+    author='XX',
+    author_email='xx@xx',
     description='schema-to-json',
     keywords='information extraction, large-language-models, llm, prompting',
     long_description=long_description,
