@@ -1,4 +1,5 @@
 data/predict
+data/gpt4v_ocr
 notebooks/
 
 # Byte-compiled / optimized / DLL files

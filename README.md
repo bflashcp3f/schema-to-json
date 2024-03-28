@@ -86,6 +86,6 @@ bash scripts/swde/prompt.sh
 bash scripts/swde/eval.sh
 ```
 
-# TODO
+<!-- # TODO
 - [ ] Add code for open-source models.
-- [ ] Clean and upload pre-processing code.
+- [ ] Clean and upload pre-processing code. -->
