@@ -42,7 +42,7 @@ Four datasets (MlTables, ChemTables, DiSCoMat and SWDE) in our benchmark are ava
 
 # Experiments
 
-Below are the commands to reproduce paper results. Make sure you set up `API_SOURCE` (`openai` or `azure`) and `BACKEND` (model name) in the script.
+Below are the commands to reproduce paper results. Make sure you set up `API_SOURCE` (`openai` or `azure`) and `BACKEND` (model name) in the script. For open-source models, use scripts with suffix `_os.sh`.
 
 
 ## MlTables
