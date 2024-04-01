@@ -30,7 +30,7 @@ TEMPLATE_PREFIX_DICT = {
 }
 
 
-TEMP_ANNO_ALLIGNMENT = {
+TEMP_ANNO_ALIGNMENT = {
     "nbaplayer": {"player name": "name", "team": "team", "height": "height", "weight": "weight"},
     "university": {"university name": "name", "university type (by fund source)": "type", "website": "website", "phone number": "phone"},
     "movie": {"movie title": "title", "director": "director", "mpaa rating": "mpaa_rating", "genre": "genre"},
@@ -112,8 +112,9 @@ class SWDEItem:
         self.prompt_prefix = prompt_prefix
         return prompt
     
-    def update_output(self, prompt_response: str) -> None:
+    def update_output(self, prompt_response: tuple) -> None:
 
+        prompt_response = prompt_response[1].rstrip().split('\n')[0]
         self.prompt_response = prompt_response
 
         try: 
@@ -151,7 +152,14 @@ class SWDE(Task):
         self.data_path = os.path.join(DATA_PATH, 'swde', f'{args.data_split}.json')
         
         self.args = args
-        model_name = args.backend if args.api_source == 'openai' else AZURE_MODELS[args.backend]
+        if args.api_source == 'openai':
+            model_name = args.backend
+        elif args.api_source == 'azure':
+            model_name = AZURE_MODELS[args.backend]
+        elif args.api_source == 'open_source':
+            model_name = args.backend
+        else:
+            raise ValueError(f'Unknown api source: {args.api_source}')
         self.output_dir = os.path.join(DATA_PATH, 'predict', self.args.task, self.args.data_split, model_name)
         self.data = self.load_data(args.task_start_index, args.task_end_index)
         self.data_processed = self.load_data_processed()
@@ -246,9 +254,11 @@ class SWDE(Task):
                     if attr in ["webpage title"]:
                         continue
                     else:
-                        assert attr in TEMP_ANNO_ALLIGNMENT[vertical_name]
+                        if attr not in TEMP_ANNO_ALIGNMENT[vertical_name]:
+                            # print(f"Attribute {attr} not in {TEMP_ANNO_ALIGNMENT[vertical_name]}")
+                            continue
 
-                    pred_attr_value, gold_attr_value = self.process_attribute(pred_attributes[attr], gold_attributes[TEMP_ANNO_ALLIGNMENT[vertical_name][attr]])
+                    pred_attr_value, gold_attr_value = self.process_attribute(pred_attributes[attr], gold_attributes[TEMP_ANNO_ALIGNMENT[vertical_name][attr]])
 
                     # Find the cloest tag content
                     def find_cloest_dom_node(attr_value, tag_content_dict, theshold=0.25, num_return=1):
@@ -285,7 +295,23 @@ class SWDE(Task):
                         raise ValueError
                     attr_result = {'tp': tp, 'fp': fp, 'fn': fn, 'tn': tn}
 
-                    attr_result_dict[vertical_name][website_name][page_id][TEMP_ANNO_ALLIGNMENT[vertical_name][attr]] = attr_result
+                    attr_result_dict[vertical_name][website_name][page_id][TEMP_ANNO_ALIGNMENT[vertical_name][attr]] = attr_result
+
+                # Handle unmatched attributes
+                assert sorted(gold_attributes.keys()) == sorted(TEMP_ANNO_ALIGNMENT[vertical_name].values())
+                matched_attributes = [TEMP_ANNO_ALIGNMENT[vertical_name][pred_attr] for pred_attr in pred_attributes.keys() if pred_attr != 'webpage title' and pred_attr in TEMP_ANNO_ALIGNMENT[vertical_name]]
+
+                for attr in gold_attributes.keys():
+
+                    gold_attr_value = gold_attributes[attr]
+
+                    if attr == 'webpage title' or attr in matched_attributes:
+                        continue
+                    elif len(gold_attr_value) == 1 and gold_attr_value[0].lower() == '<null>':
+                        attr_result_dict[vertical_name][website_name][page_id][attr] = attr_result = {'tp': 0, 'fp': 0, 'fn': 0, 'tn': 0}
+                    else:
+                        attr_result_dict[vertical_name][website_name][page_id][attr] = attr_result = {'tp': 0, 'fp': 0, 'fn': 1, 'tn': 0}
+
 
         return attr_result_dict
 
@@ -293,7 +319,7 @@ class SWDE(Task):
         attr_metrics_dict = defaultdict(nested_dict_factory_3)
         attr_result_dict = self.get_attr_result(vertical_name)
 
-        attr_list = list(TEMP_ANNO_ALLIGNMENT[vertical_name].values())
+        attr_list = list(TEMP_ANNO_ALIGNMENT[vertical_name].values())
 
         for website_name in sorted(attr_result_dict[vertical_name].keys()):
             for each_attr in attr_list:

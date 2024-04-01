@@ -5,9 +5,9 @@ from schema2json.tasks.discomat import DiSCoMaT
 from schema2json.tasks.swde import SWDE
 
 def get_task(args):
-    if args.task == 'mltables':
+    if args.task.startswith('mltables'):
         return MLTables(args)
-    elif args.task == 'chemtables':
+    elif args.task.startswith('chemtables'):
         return ChemTables(args)
     elif args.task == 'discomat':
         return DiSCoMaT(args)

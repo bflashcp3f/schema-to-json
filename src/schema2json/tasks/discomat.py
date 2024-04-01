@@ -64,7 +64,7 @@ class DiSCoMaTItem:
             assert len(self.cell_list_pred) < len(self.cells_extracted)
             return self.cells_extracted[len(self.cell_list_pred)]
 
-    def prompt_wrap(self, template: str, encoding, max_output_tokens, max_length) -> str:
+    def prompt_wrap(self, template: str, encoding, max_output_tokens, max_length, open_source=False) -> str:
         
         # Control the length of the table code and table text
         table_text = self.table_text
@@ -74,8 +74,8 @@ class DiSCoMaTItem:
             table_code_text = self.table_code
 
         if table_text is not None:
-            while num_tokens_from_string(table_code_text, encoding) > (max_length/2) and table_text.strip() != '':
-                print(f"Table code length: {num_tokens_from_string(table_code_text, encoding)}")
+            while num_tokens_from_string(table_code_text, encoding, open_source) > (max_length/2) and table_text.strip() != '':
+                print(f"Table code length: {num_tokens_from_string(table_code_text, encoding, open_source)}")
                 table_text = '\n\n'.join(table_text.split('\n\n')[1:])
                 table_code_text = f"{table_text}\n\n{self.table_code}"
 
@@ -86,8 +86,8 @@ class DiSCoMaTItem:
         cell_describe_idx = 0
         prompt_prefix = '\n'.join([json.dumps(cell_describe) for cell_describe in self.cell_list_pred[cell_describe_idx:]] + [prompt_cell_prefix])
 
-        while num_tokens_from_string(prompt_prefix, encoding) + max_output_tokens + num_tokens_from_string(template, encoding) > (max_length-num_tokens_from_string(table_code_text, encoding)) and cell_describe_idx < len(self.cell_list_pred):
-            print(f"prompt_prefix length: {num_tokens_from_string(prompt_prefix, encoding)}")
+        while num_tokens_from_string(prompt_prefix, encoding, open_source) + max_output_tokens + num_tokens_from_string(template, encoding, open_source) > (max_length-num_tokens_from_string(table_code_text, encoding, open_source)) and cell_describe_idx < len(self.cell_list_pred):
+            print(f"prompt_prefix length: {num_tokens_from_string(prompt_prefix, encoding, open_source)}")
             # Remove the first cell description in the prompt prefix
             cell_describe_idx += 1
             prompt_prefix = '\n'.join([json.dumps(cell_describe) for cell_describe in self.cell_list_pred[cell_describe_idx:]] + [prompt_cell_prefix])
@@ -101,7 +101,7 @@ class DiSCoMaTItem:
         assert "{{prompt_prefix}}" in prompt
         prompt = prompt.replace("{{prompt_prefix}}", prompt_prefix)
 
-        num_prompt_tokens = num_tokens_from_string(prompt, encoding)
+        num_prompt_tokens = num_tokens_from_string(prompt, encoding, open_source)
         assert num_prompt_tokens + max_output_tokens <= max_length
         print(f"Number of prompt tokens: {num_prompt_tokens}")
 
@@ -433,7 +433,14 @@ class DiSCoMaT(Task):
         self.data_path = os.path.join(DATA_PATH, 'discomat', f'{args.data_split}.json')
         self.template = globals()[args.template]
         self.args = args
-        model_name = args.backend if args.api_source == 'openai' else AZURE_MODELS[args.backend]
+        if args.api_source == 'openai':
+            model_name = args.backend
+        elif args.api_source == 'azure':
+            model_name = AZURE_MODELS[args.backend]
+        elif args.api_source == 'open_source':
+            model_name = args.backend
+        else:
+            raise ValueError(f'Unknown api source: {args.api_source}')
         self.output_dir = os.path.join(DATA_PATH, 'predict', self.args.task, self.args.data_split, model_name, args.template)
         self.data = self.load_data(args.task_start_index, args.task_end_index)
 

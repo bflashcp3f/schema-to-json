@@ -6,17 +6,17 @@
 API_SOURCE=azure
 BACKEND=gpt4
 
-# python run.py \
-#     --run_type eval \
-#     --api_source $API_SOURCE \
-#     --backend $BACKEND \
-#     --task mltables \
-#     --prompt_setting error_recovery \
-#     --template template_filling \
-#     --data_split test \
-#     --metric f1 \
-#     --threshold 0.25 \
-#     --verbose
+python run.py \
+    --run_type eval \
+    --api_source $API_SOURCE \
+    --backend $BACKEND \
+    --task mltables \
+    --prompt_setting error_recovery \
+    --template template_filling \
+    --data_split test \
+    --metric f1 \
+    --threshold 0.25 \
+    --verbose
 
 python run.py \
     --run_type eval \
@@ -24,7 +24,8 @@ python run.py \
     --backend $BACKEND \
     --task mltables \
     --prompt_setting error_recovery \
-    --template template_filling_gpt4_typo \
+    --template template_filling \
     --data_split test \
     --metric exact_match \
     --verbose
+

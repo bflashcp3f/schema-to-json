@@ -1,5 +1,9 @@
 data/predict
 data/gpt4v_ocr
+data/chemtables_csv/
+data/chemtables_latex/
+data/mltables/test_orc.json
+data/mltables_html/
 notebooks/
 
 # Byte-compiled / optimized / DLL files

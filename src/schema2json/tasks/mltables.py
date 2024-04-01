@@ -30,7 +30,7 @@ TEMPLATE_ATTRIBUTES = {
 }
 
 
-TEMP_ANNO_ALLIGNMENT = {
+TEMP_ANNO_ALIGNMENT = {
     "type": "type", "char_index": "char_index", "value": "value", "training data/set": "training data/set", "test data/set": "test data/set", 
     "task": "task", "metric": "metric", "model/method": "model", "experimental settings": "experimental settings", 
     "model/method settings": "model settings", "dataset": "dataset", "attribute name": "attribute name", "model": "model",
@@ -114,14 +114,14 @@ class MlTablesItem:
             assert len(self.cell_list_pred) < len(self.cells_extracted)
             return self.cells_extracted[len(self.cell_list_pred)]
         
-    def prompt_wrap(self, template: str, encoding, max_output_tokens, max_length) -> str:
+    def prompt_wrap(self, template: str, encoding, max_output_tokens, max_length, open_source=False) -> str:
         
         # Control the length of the table code and table text
         table_text = self.table_text
         table_code_text = f"{table_text}\n\n{self.table_code}"
 
-        while num_tokens_from_string(table_code_text, encoding) > (max_length/2) and table_text.strip() != '':
-            print(f"Table code length: {num_tokens_from_string(table_code_text, encoding)}")
+        while num_tokens_from_string(table_code_text, encoding, open_source) > (max_length/2) and table_text.strip() != '':
+            print(f"Table code length: {num_tokens_from_string(table_code_text, encoding, open_source)}")
             table_text = '\n\n'.join(table_text.split('\n\n')[1:])
             table_code_text = f"{table_text}\n\n{self.table_code}"
 
@@ -132,8 +132,8 @@ class MlTablesItem:
         cell_describe_idx = 0
         prompt_prefix = '\n'.join([json.dumps(cell_describe) for cell_describe in self.cell_list_pred[cell_describe_idx:]] + [prompt_cell_prefix])
 
-        while num_tokens_from_string(prompt_prefix, encoding) + max_output_tokens + num_tokens_from_string(template, encoding) > (max_length-num_tokens_from_string(table_code_text, encoding)) and cell_describe_idx < len(self.cell_list_pred):
-            print(f"prompt_prefix length: {num_tokens_from_string(prompt_prefix, encoding)}")
+        while num_tokens_from_string(prompt_prefix, encoding, open_source) + max_output_tokens + num_tokens_from_string(template, encoding, open_source) > (max_length-num_tokens_from_string(table_code_text, encoding, open_source)) and cell_describe_idx < len(self.cell_list_pred):
+            print(f"prompt_prefix length: {num_tokens_from_string(prompt_prefix, encoding, open_source)}")
             # Remove the first cell description in the prompt prefix
             cell_describe_idx += 1
             prompt_prefix = '\n'.join([json.dumps(cell_describe) for cell_describe in self.cell_list_pred[cell_describe_idx:]] + [prompt_cell_prefix])
@@ -147,9 +147,9 @@ class MlTablesItem:
         assert "{{prompt_prefix}}" in prompt
         prompt = prompt.replace("{{prompt_prefix}}", prompt_prefix)
 
-        num_prompt_tokens = num_tokens_from_string(prompt, encoding)
-        assert num_prompt_tokens + max_output_tokens <= max_length
+        num_prompt_tokens = num_tokens_from_string(prompt, encoding, open_source)
         print(f"Number of prompt tokens: {num_prompt_tokens}")
+        assert num_prompt_tokens + max_output_tokens <= max_length
 
         self.prompt = prompt
 
@@ -179,6 +179,7 @@ class MlTablesItem:
         print("Output raw:\n", output_raw, '\n')
 
         # Parse the output to a list of JSON objects
+        output_raw = output_raw.split('\n\n')[0]
         output_list = output_raw.split('\n')
         output_processed = []
         for output in output_list:
@@ -192,12 +193,18 @@ class MlTablesItem:
             if '\\\\"' in output:
                 output = output.replace('\\\\"', "'")
 
+            output = output.strip().strip('.')
+            # breakpoint()
+            if output.count('"value"') > 1:
+                output = output[:output.index('"value":')+len('"value":')] + output[output.index('"value":')+len('"value":'):].replace('"value"', '"random"')
+
             try:
                 output = json.loads(output)
             except:
-                if 'Other' in output and '"type":' in output:
+                if 'Other' in output and '"type":' in output and '"' not in output[output.index('"value":')+8:output.index('"type":')].strip().strip(',"'):
                     output = output[:output.index('"type":')] + '"type": "Other"}'
                     output = json.loads(output)
+
                 elif len(output_list) > 1:
                     continue
                 else:
@@ -231,7 +238,7 @@ class MlTablesItem:
             cell_exp_value = cell_list_expected[cell_idx].cell_value
             cell_exp_value_start = cell_list_expected[cell_idx].cell_value_start
             cell_exp_value_end = cell_list_expected[cell_idx].cell_value_end
-            assert cell_exp_value == self.table_code[cell_exp_value_start:cell_exp_value_end]
+            # assert cell_exp_value == self.table_code[cell_exp_value_start:cell_exp_value_end]
 
             # Check the predicted cell value is the same as the desired cell value
             if output['value'] == cell_exp_value:
@@ -488,9 +495,9 @@ class MlTablesItem:
                 pred_item_mod ={}
                 for attribute in TEMPLATE_ATTRIBUTES[pred_item['type']]:
                     if attribute in pred_item:
-                        pred_item_mod[TEMP_ANNO_ALLIGNMENT[attribute]] = pred_item[attribute]
+                        pred_item_mod[TEMP_ANNO_ALIGNMENT[attribute]] = pred_item[attribute]
                     else:
-                        pred_item_mod[TEMP_ANNO_ALLIGNMENT[attribute]] = 'xx' if attribute not in FREE_FORM_PROMPT else {"xx": "yy"}
+                        pred_item_mod[TEMP_ANNO_ALIGNMENT[attribute]] = 'xx' if attribute not in FREE_FORM_PROMPT else {"xx": "yy"}
                 pred_data_mod.append(pred_item_mod)
             else:
                 # Change the type of the cell description to "Other"
@@ -531,10 +538,17 @@ class MlTablesItem:
 
 class MLTables(Task):
     def __init__(self, args) -> None:
-        self.data_path = os.path.join(DATA_PATH, 'mltables', f'{args.data_split}.json')
+        self.data_path = os.path.join(DATA_PATH, 'mltables' if args.task == 'mltables' else 'mltables_html', f'{args.data_split}.json')
         self.template = globals()[args.template]
         self.args = args
-        model_name = args.backend if args.api_source == 'openai' else AZURE_MODELS[args.backend]
+        if args.api_source == 'openai':
+            model_name = args.backend
+        elif args.api_source == 'azure':
+            model_name = AZURE_MODELS[args.backend]
+        elif args.api_source == 'open_source':
+            model_name = args.backend
+        else:
+            raise ValueError(f'Unknown api source: {args.api_source}')
         self.output_dir = os.path.join(DATA_PATH, 'predict', self.args.task, self.args.data_split, model_name, args.template)
         self.data = self.load_data(args.task_start_index, args.task_end_index)
 

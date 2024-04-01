@@ -32,14 +32,20 @@ def main(args):
             openai.api_base = "https://inference.openai.azure.com/"
             openai.api_version = "2023-07-01-preview"
             openai.api_key = os.getenv("AZURE_OPENAI_KEY")
-        else:
+        elif args.api_source != 'open_source':
             raise ValueError(f"API source {args.api_source} not supported")
 
         # Run the task
         if args.prompt_setting == 'error_recovery':
-            prompt_error_recovery(args, task)
+            if not args.api_source == 'open_source':
+                prompt_error_recovery(args, task)
+            else:
+                prompt_error_recovery(args, task, open_source=True)
         elif args.prompt_setting == 'one_by_one':
-            prompt_one_by_one(args, task)
+            if not args.api_source == 'open_source':
+                prompt_one_by_one(args, task)
+            else:
+                prompt_one_by_one(args, task, open_source=True)
         else:
             raise ValueError(f"Prompt setting {args.prompt_setting} not supported")
     
@@ -62,7 +68,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--run_type', type=str, choices=['prompt', 'eval'], required=True)
 
-    parser.add_argument('--api_source', type=str, choices=['openai', 'azure'], required=True)
+    parser.add_argument('--api_source', type=str, choices=['openai', 'azure', 'open_source'], required=True)
     parser.add_argument('--backend', type=str, required=True)
     parser.add_argument('--prompt_setting', type=str, default='error_recovery', choices=['error_recovery', 'one_by_one'], required=True)
     
