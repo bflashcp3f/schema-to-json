@@ -1,15 +1,16 @@
 Schema-Driven Information Extraction from Heterogeneous Tables
 ===============================================================================
 
-This repo contains code and data associated with EMNLP 2024 Findings paper ["Schema-Driven Information Extraction from Heterogeneous Tables"](https://arxiv.org/abs/2305.14336).
+This repo contains code and data associated with the EMNLP 2024 Findings paper ["Schema-Driven Information Extraction from Heterogeneous Tables"](https://arxiv.org/abs/2305.14336).
 ```
-@misc{bai2023schemadriven,
-    title={Schema-Driven Information Extraction from Heterogeneous Tables},
-    author={Fan Bai and Junmo Kang and Gabriel Stanovsky and Dayne Freitag and Alan Ritter},
-    year={2023},
-    eprint={2305.14336},
-    archivePrefix={arXiv},
-    primaryClass={cs.CL}
+@misc{bai2024schemadriveninformationextractionheterogeneous,
+      title={Schema-Driven Information Extraction from Heterogeneous Tables}, 
+      author={Fan Bai and Junmo Kang and Gabriel Stanovsky and Dayne Freitag and Mark Dredze and Alan Ritter},
+      year={2024},
+      eprint={2305.14336},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2305.14336}, 
 }
 ```
 
